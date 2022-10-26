@@ -1,0 +1,3 @@
+[submodule "src/table_detr"]
+	path = src/table_detr
+	url = git@github.com:microsoft/table-transformer.git

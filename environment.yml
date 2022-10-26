@@ -1,0 +1,25 @@
+name: table-detr
+channels:
+  - conda-forge
+  - pytorch
+dependencies:
+  - python=3.7
+  - pip
+  - pytorch==1.5.1
+  - torchvision==0.6.1
+  - cpuonly
+  - pytesseract
+  - pandas
+  - scipy
+  - rich
+  - packaging
+  - tqdm
+  - uvicorn
+  - gunicorn
+  - fastapi
+  - python-multipart
+  - requests
+  - pip:
+      - PyMuPDF==1.16.14
+      - git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonAPI&egg=pycocotools
+      - -e .
