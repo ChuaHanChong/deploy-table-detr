@@ -13,6 +13,7 @@ $(ENV_PATH)/touchfile: environment.yml
 	test -d $(ENV_PATH) || $(CONDA) env create -f environment.yml -q
 	$(CONDA) env update -f environment.yml --prune
 	$(CONDA) install -n $(ENV_NAME) -c conda-forge pre-commit flake8 pep8-naming black pydocstyle mypy -y
+	$(CONDA) install -n $(ENV_NAME) -c conda-forge jupyter_core ipywidgets -y
 	$(ENV_PATH)/bin/pre-commit install
 	touch $(ENV_PATH)/touchfile
 

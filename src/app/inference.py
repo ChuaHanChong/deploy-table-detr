@@ -4,7 +4,6 @@ import json
 import pandas as pd
 import pytesseract
 import torch
-
 from table_detr.src.eval import (
     objects_to_cells,
     rescale_bboxes,
@@ -13,7 +12,6 @@ from table_detr.src.eval import (
     structure_class_thresholds,
 )
 from table_detr.src.main import get_model, get_transform
-
 
 MIN_SCORE = 0.5
 
@@ -70,10 +68,21 @@ def predict(preprocessor, model, image):
     return postprocess(pred_logits, pred_bboxes, image.size)
 
 
-def filter_table_bboxes(pred_bboxes, pred_labels, pred_scores):
-    """Filter table bbox."""
+def select_table_predictions(pred_labels, pred_scores, pred_bboxes):
+    """Select and reconstruct table predictions."""
     return [
-        bbox for bbox, label, score in zip(pred_bboxes, pred_labels, pred_scores) if not label > 1 and score > MIN_SCORE
+        {"label": label, "score": score, "bbox": bbox}
+        for label, score, bbox in zip(pred_labels, pred_scores, pred_bboxes)
+        if not label > 1 and score > MIN_SCORE
+    ]
+
+
+def select_structure_predictions(pred_labels, pred_scores, pred_bboxes):
+    """Select and reconstruct table predictions."""
+    return [
+        {"label": label, "score": score, "bbox": bbox}
+        for label, score, bbox in zip(pred_labels, pred_scores, pred_bboxes)
+        if not label > 5 and score > MIN_SCORE
     ]
 
 
@@ -123,10 +132,11 @@ def pipeline(**kwargs):
     pred_labels, pred_scores, pred_bboxes = predict(
         kwargs["detection_preprocessor"], kwargs["detection_model"], kwargs["image"]
     )
-    table_bboxes = filter_table_bboxes(pred_bboxes, pred_labels, pred_scores)
+    pred_tables = select_table_predictions(pred_labels, pred_scores, pred_bboxes)
 
     table_records = []
-    for bbox in table_bboxes:
+    for pred in pred_tables:
+        bbox = pred["bbox"]
         _bbox = [bbox[0] - 50, bbox[1] - 50, bbox[2] + 50, bbox[3] + 50]
         table_img = kwargs["image"].crop(_bbox)
 
