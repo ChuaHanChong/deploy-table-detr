@@ -1,7 +1,6 @@
 """Main executive module."""
 import argparse
 import requests
-import pandas as pd
 
 
 def main(args):
