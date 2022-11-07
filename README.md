@@ -12,6 +12,13 @@ make env
 ```
 
 ```bash
+mkdir models
+cd models
+wget https://pubtables1m.blob.core.windows.net/model/pubtables1m_detection_detr_r18.pth
+wget https://pubtables1m.blob.core.windows.net/model/pubtables1m_structure_detr_r18.pth
+```
+
+```bash
 uvicorn src.app.api:app --host 0.0.0.0 --port 8000 --log-config src/app/log.ini --reload --reload-dir src  # dev
 gunicorn src.app.api:app -c src/app/gunicorn.py -k uvicorn.workers.UvicornWorker --log-config src/app/log.ini  # prod
 ```
