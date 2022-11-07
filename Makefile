@@ -10,9 +10,9 @@ PYTHON = $(ENV_PATH)/bin/python
 env: $(ENV_PATH)/touchfile
 $(ENV_PATH)/touchfile: environment.yml
 	test -d $(ENV_PATH) || $(CONDA) env create -f environment.yml -q
-	$(CONDA) env update -f environment.yml --prune
-	$(CONDA) install -n $(ENV_NAME) -c conda-forge pre-commit flake8 pep8-naming black pydocstyle mypy -y
-	$(CONDA) install -n $(ENV_NAME) -c conda-forge jupyter_core ipywidgets -y
+	$(CONDA) env update -f environment.yml --prune -q
+	$(CONDA) install -n $(ENV_NAME) -c conda-forge pre-commit flake8 pep8-naming black pydocstyle mypy -y -q
+	$(CONDA) install -n $(ENV_NAME) -c conda-forge jupyter_core ipywidgets -y -q
 	$(ENV_PATH)/bin/pre-commit install
 	touch $(ENV_PATH)/touchfile
 
