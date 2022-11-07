@@ -16,6 +16,4 @@ if __name__ == "__main__":
     parser.add_argument("--url", type=str, default="http://0.0.0.0:8000/predict")
 
     args = parser.parse_args()
-    resp = main(args)
-    print(resp)
-    print(pd.read_json(resp["data"]["records"][0]))
+    print(main(args))
