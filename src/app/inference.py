@@ -1,5 +1,6 @@
 """Helper functions for model inference."""
 import json
+import uuid
 
 import pandas as pd
 import pytesseract
@@ -13,7 +14,6 @@ from table_detr.src.eval import (
     structure_class_thresholds,
 )
 from table_detr.src.main import get_model, get_transform
-
 
 MIN_SCORE = 0.5
 
@@ -70,10 +70,21 @@ def predict(preprocessor, model, image):
     return postprocess(pred_logits, pred_bboxes, image.size)
 
 
-def filter_table_bboxes(pred_bboxes, pred_labels, pred_scores):
-    """Filter table bbox."""
+def select_table_predictions(pred_labels, pred_scores, pred_bboxes):
+    """Select and reconstruct table predictions."""
     return [
-        bbox for bbox, label, score in zip(pred_bboxes, pred_labels, pred_scores) if not label > 1 and score > MIN_SCORE
+        {"label": label, "score": score, "bbox": bbox}
+        for label, score, bbox in zip(pred_labels, pred_scores, pred_bboxes)
+        if not label > 1 and score > MIN_SCORE
+    ]
+
+
+def select_structure_predictions(pred_labels, pred_scores, pred_bboxes):
+    """Select and reconstruct table predictions."""
+    return [
+        {"label": label, "score": score, "bbox": bbox}
+        for label, score, bbox in zip(pred_labels, pred_scores, pred_bboxes)
+        if not label > 5 and score > MIN_SCORE
     ]
 
 
@@ -118,17 +129,29 @@ def reconstruct_table(cells, orient="records"):
     return df.to_json(orient=orient)
 
 
+def reconstruct_bbox(bbox):
+    """Reconstruct the location of bounding box."""
+    return {"Width": bbox[2] - bbox[0], "Height": bbox[3] - bbox[1], "Left": bbox[0], "Top": bbox[1]}
+
+
 def pipeline(**kwargs):
     """Run full prediction pipeline."""
-    pred_labels, pred_scores, pred_bboxes = predict(
-        kwargs["detection_preprocessor"], kwargs["detection_model"], kwargs["image"]
-    )
-    table_bboxes = filter_table_bboxes(pred_bboxes, pred_labels, pred_scores)
+    table_records = {}
 
-    table_records = []
-    for bbox in table_bboxes:
-        _bbox = [bbox[0] - 50, bbox[1] - 50, bbox[2] + 50, bbox[3] + 50]
-        table_img = kwargs["image"].crop(_bbox)
+    # Predict table
+    for i, img in enumerate(kwargs["images"], 1):
+        pred_labels, pred_scores, pred_bboxes = predict(
+            kwargs["detection_preprocessor"], kwargs["detection_model"], img
+        )
+        pred_tables = select_table_predictions(pred_labels, pred_scores, pred_bboxes)
+
+        for pred in pred_tables:
+            table_records[str(uuid.uuid4())] = {"Page": i, "Score": pred["score"], "BoundingBox": pred["bbox"]}
+
+    # Reconstruct table
+    for record in table_records.values():
+        bbox = record["BoundingBox"]
+        table_img = kwargs["images"][record["Page"] - 1].crop(bbox)  # page is started from 1
 
         tokens = detect_text(table_img)
 
@@ -146,6 +169,10 @@ def pipeline(**kwargs):
             structure_class_map,
         )
 
-        table_records.append(reconstruct_table(pred_cells))
+        record["Table"] = reconstruct_table(pred_cells)
+
+    # Reconstruct bounding box
+    for record in table_records.values():
+        record["BoundingBox"] = reconstruct_bbox(record["BoundingBox"])
 
     return table_records

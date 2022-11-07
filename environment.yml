@@ -11,6 +11,8 @@ dependencies:
   - pytesseract
   - pandas
   - scipy
+  - pdf2image
+  - poppler
   - rich
   - packaging
   - tqdm
