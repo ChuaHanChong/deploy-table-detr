@@ -1,6 +1,5 @@
 ```bash
-sudo apt install tesseract-ocr
-sudo apt install libtesseract-dev
+sudo apt install tesseract-ocr libtesseract-dev -y
 make env
 ```
 
