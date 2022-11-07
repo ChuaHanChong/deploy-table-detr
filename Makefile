@@ -5,7 +5,6 @@ CONDA = conda
 ENV_NAME = table-detr
 ENV_PATH = $(shell $(CONDA) info --base)/envs/$(ENV_NAME)
 PYTHON = $(ENV_PATH)/bin/python
-ENV_ACTIVATE = $(CONDA) activate $(ENV_NAME)
 
 .PHONY: env
 env: $(ENV_PATH)/touchfile

@@ -23,8 +23,8 @@ docker run -p 8000:8000 --name table-detr-serving table-detr-serving:latest
 
 ```bash
 curl -X 'POST' \
-    'http://0.0.0.0:8000/predict' \
-    -H 'accept: application/json' \
-    -H 'Content-Type: multipart/form-data' \
-    -F 'file=@<file-path>;type=image/jpeg'
+  'http://0.0.0.0:8000/predict' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: multipart/form-data' \
+  -F 'file=@<file-path>;type=application/pdf'
 ```

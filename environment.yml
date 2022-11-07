@@ -12,6 +12,8 @@ dependencies:
   - pandas
   - scipy
   - opencv
+  - pdf2image
+  - poppler
   - rich
   - packaging
   - tqdm

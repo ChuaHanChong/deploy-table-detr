@@ -1,9 +1,11 @@
 """Helper functions for model inference."""
 import json
+import uuid
 
 import pandas as pd
 import pytesseract
 import torch
+
 from table_detr.src.eval import (
     objects_to_cells,
     rescale_bboxes,
@@ -127,18 +129,29 @@ def reconstruct_table(cells, orient="records"):
     return df.to_json(orient=orient)
 
 
+def reconstruct_bbox(bbox):
+    """Reconstruct the location of bounding box."""
+    return {"Width": bbox[0], "Height": bbox[1], "Left": bbox[2], "Top": bbox[3]}
+
+
 def pipeline(**kwargs):
     """Run full prediction pipeline."""
-    pred_labels, pred_scores, pred_bboxes = predict(
-        kwargs["detection_preprocessor"], kwargs["detection_model"], kwargs["image"]
-    )
-    pred_tables = select_table_predictions(pred_labels, pred_scores, pred_bboxes)
+    table_records = {}
 
-    table_records = []
-    for pred in pred_tables:
-        bbox = pred["bbox"]
-        _bbox = [bbox[0] - 50, bbox[1] - 50, bbox[2] + 50, bbox[3] + 50]
-        table_img = kwargs["image"].crop(_bbox)
+    # Predict table
+    for i, img in enumerate(kwargs["images"]):
+        pred_labels, pred_scores, pred_bboxes = predict(
+            kwargs["detection_preprocessor"], kwargs["detection_model"], img
+        )
+        pred_tables = select_table_predictions(pred_labels, pred_scores, pred_bboxes)
+
+        for pred in pred_tables:
+            table_records[str(uuid.uuid4())] = {"Page": i, "Score": pred["score"], "BoundingBox": pred["bbox"]}
+
+    # Reconstruct table
+    for record in table_records.values():
+        bbox = record["BoundingBox"]
+        table_img = kwargs["images"][record["Page"]].crop(bbox)
 
         tokens = detect_text(table_img)
 
@@ -156,6 +169,10 @@ def pipeline(**kwargs):
             structure_class_map,
         )
 
-        table_records.append(reconstruct_table(pred_cells))
+        record["Table"] = reconstruct_table(pred_cells)
+
+    # Reconstruct bounding box
+    for record in table_records.values():
+        record["BoundingBox"] = reconstruct_bbox(record["BoundingBox"])
 
     return table_records
