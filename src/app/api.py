@@ -83,7 +83,7 @@ def _predict(request: Request, file: UploadFile = File(...)) -> Dict:
         images=images,
     )
 
-    response = {"message": HTTPStatus.OK.phrase, "status-code": HTTPStatus.OK, "data": {"records": table_records}}
+    response = {"message": HTTPStatus.OK.phrase, "status-code": HTTPStatus.OK, "data": table_records}
 
     file.file.close()
     return response

@@ -131,7 +131,7 @@ def reconstruct_table(cells, orient="records"):
 
 def reconstruct_bbox(bbox):
     """Reconstruct the location of bounding box."""
-    return {"Width": bbox[0], "Height": bbox[1], "Left": bbox[2], "Top": bbox[3]}
+    return {"Width": bbox[2] - bbox[0], "Height": bbox[3] - bbox[1], "Left": bbox[0], "Top": bbox[1]}
 
 
 def pipeline(**kwargs):
@@ -139,7 +139,7 @@ def pipeline(**kwargs):
     table_records = {}
 
     # Predict table
-    for i, img in enumerate(kwargs["images"]):
+    for i, img in enumerate(kwargs["images"], 1):
         pred_labels, pred_scores, pred_bboxes = predict(
             kwargs["detection_preprocessor"], kwargs["detection_model"], img
         )
@@ -151,7 +151,7 @@ def pipeline(**kwargs):
     # Reconstruct table
     for record in table_records.values():
         bbox = record["BoundingBox"]
-        table_img = kwargs["images"][record["Page"]].crop(bbox)
+        table_img = kwargs["images"][record["Page"] - 1].crop(bbox)  # page is started from 1
 
         tokens = detect_text(table_img)
 
