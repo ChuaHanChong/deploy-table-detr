@@ -56,6 +56,7 @@ def visualize_bbox(image, preds, data_type):
 
     fig.set_size_inches((15, 15))
     plt.axis("off")
+    plt.show()
 
 
 def visualize_postprocessed_cell(image, cells):
@@ -107,3 +108,4 @@ def visualize_postprocessed_cell(image, cells):
 
     fig.set_size_inches((15, 15))
     plt.axis("off")
+    plt.show()
