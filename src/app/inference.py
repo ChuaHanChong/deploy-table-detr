@@ -5,6 +5,7 @@ import uuid
 import pandas as pd
 import pytesseract
 import torch
+from PIL import Image
 
 from table_detr.src.eval import (
     objects_to_cells,
@@ -88,9 +89,26 @@ def select_structure_predictions(pred_labels, pred_scores, pred_bboxes):
     ]
 
 
+def pad_image(image, left=50, top=50, right=50, bottom=50, color=(255, 255, 255)):
+    """Pad image with zero pixel values."""
+    width, height = image.size
+
+    new_width = width + right + left
+    new_height = height + top + bottom
+
+    result = Image.new(image.mode, (new_width, new_height), color)
+    result.paste(image, (left, top))
+    return result
+
+
+def enlarge_bbox(bbox, left=50, top=50, right=100, bottom=100):
+    """Enlarge bounding box."""
+    return (bbox[0] - left, bbox[1] - top, bbox[2] + right, bbox[3] + bottom)
+
+
 def detect_text(image):
     """Detect text in image with Tesseract."""
-    span_num = 0  # why?
+    span_num = 0
 
     boxes = pytesseract.image_to_data(image)
 
@@ -105,9 +123,9 @@ def detect_text(image):
                     "bbox": [x, y, x + w, y + h],
                     "text": b[11],
                     "flags": 0,
-                    "span_num": span_num,  # why?
-                    "line_num": 0,  # why?
-                    "block_num": 0,  # why?
+                    "span_num": span_num,
+                    "line_num": 0,
+                    "block_num": 0,
                 }
             )
             span_num += 1
@@ -139,7 +157,7 @@ def pipeline(**kwargs):
     table_records = {}
 
     # Predict table
-    for i, img in enumerate(kwargs["images"], 1):
+    for i, img in enumerate(kwargs["images"]):
         pred_labels, pred_scores, pred_bboxes = predict(
             kwargs["detection_preprocessor"], kwargs["detection_model"], img
         )
@@ -150,8 +168,9 @@ def pipeline(**kwargs):
 
     # Reconstruct table
     for record in table_records.values():
-        bbox = record["BoundingBox"]
-        table_img = kwargs["images"][record["Page"] - 1].crop(bbox)  # page is started from 1
+        img = pad_image(kwargs["images"][record["Page"]])
+        bbox = enlarge_bbox(record["BoundingBox"])
+        table_img = img.crop(bbox)
 
         tokens = detect_text(table_img)
 
