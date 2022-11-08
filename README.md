@@ -18,8 +18,8 @@ wget https://pubtables1m.blob.core.windows.net/model/pubtables1m_structure_detr_
 ```
 
 ```bash
-uvicorn src.app.api:app --host 0.0.0.0 --port 8000 --log-config src/app/log.ini --reload --reload-dir src  # dev
-gunicorn src.app.api:app -c src/app/gunicorn.py -k uvicorn.workers.UvicornWorker --log-config src/app/log.ini  # prod
+uvicorn src.app.api:app --host 0.0.0.0 --port 8000 --reload --reload-dir src  # dev
+gunicorn src.app.api:app -c src/app/gunicorn.py -k uvicorn.workers.UvicornWorker  # prod
 ```
 
 ```bash
